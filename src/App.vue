@@ -182,7 +182,7 @@ const scrollSection = (id) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-orange-600 selection:text-white pt-20 pb-20 md:pb-0">
+  <div class="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-orange-600 selection:text-white pt-16 md:pt-20 pb-20 md:pb-0">
     
     <!-- 1. Header with Brand, Search & Cart (No Overflow!) -->
     <HeaderNav
@@ -381,20 +381,20 @@ const scrollSection = (id) => {
     />
 
     <!-- Floating WhatsApp Customer Communication Button -->
-    <aside aria-label="Customer Support" class="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40">
+    <aside aria-label="Customer Support" class="fixed bottom-20 md:bottom-6 right-3 md:right-6 z-40">
       <a
         href="https://wa.me/995511195755"
         target="_blank"
         rel="noopener noreferrer"
-        class="flex items-center gap-2.5 px-4 py-3 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-2xl shadow-emerald-950/60 transition-all duration-300 hover:scale-105 cursor-pointer border border-emerald-400/40 group backdrop-blur-sm"
+        class="flex items-center justify-center gap-2.5 w-11 h-11 md:w-auto md:h-auto md:px-4 md:py-3 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-2xl shadow-emerald-950/60 transition-all duration-300 hover:scale-105 cursor-pointer border border-emerald-400/40 group backdrop-blur-sm"
         :title="t.whatsappChat"
       >
-        <span class="relative flex h-2.5 w-2.5">
+        <span class="relative flex h-2 w-2 md:h-2.5 md:w-2.5 shrink-0">
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 md:h-2.5 md:w-2.5 bg-emerald-400"></span>
         </span>
-        <MessageCircle class="w-5 h-5 fill-white/20 text-white" />
-        <span class="hidden sm:inline font-semibold">{{ t.whatsappChat }}</span>
+        <MessageCircle class="w-5 h-5 fill-white/20 text-white shrink-0" />
+        <span class="hidden md:inline font-semibold">{{ t.whatsappChat }}</span>
       </a>
     </aside>
 
