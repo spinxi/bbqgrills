@@ -7,9 +7,10 @@ import {
   Plus, 
   Minus, 
   Truck, 
+  CreditCard,
+  Banknote,
   CheckCircle2, 
-  ArrowRight,
-  Tag
+  ArrowRight
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -39,54 +40,48 @@ const emit = defineEmits([
   'checkout-completed'
 ])
 
-const fulfillmentType = ref('delivery')
-const promoCode = ref('')
-const promoApplied = ref(false)
+const deliveryType = ref('tbilisi') // 'self' | 'tbilisi' | 'regions'
+const paymentMethod = ref('online') // 'online' | 'cod'
 const isCheckingOut = ref(false)
 const orderSuccess = ref(false)
+const lastOrderRef = ref('')
 
 const subtotal = computed(() => {
   return props.items.reduce((acc, item) => acc + (item.product.price * item.quantity), 0)
 })
 
-const discount = computed(() => {
-  if (promoApplied.value) {
-    return Math.round(subtotal.value * 0.05)
-  }
-  return 0
-})
-
-const shippingFee = computed(() => {
-  if (fulfillmentType.value !== 'delivery') return 0
-  if (subtotal.value >= 150) return 0
-  return 15
+const deliveryFee = computed(() => {
+  if (deliveryType.value === 'self') return 0
+  if (deliveryType.value === 'tbilisi') return 20
+  if (deliveryType.value === 'regions') return 35
+  return 20
 })
 
 const finalTotal = computed(() => {
-  return Math.max(0, subtotal.value - discount.value + shippingFee.value)
+  return subtotal.value + deliveryFee.value
 })
-
-const applyPromo = () => {
-  if (promoCode.value.trim().toUpperCase() === 'GRILL2025' || promoCode.value.trim().toUpperCase() === 'VIP') {
-    promoApplied.value = true
-  }
-}
 
 const proceedToCheckout = () => {
   isCheckingOut.value = true
   setTimeout(() => {
     isCheckingOut.value = false
+    lastOrderRef.value = 'BBQ-' + Math.floor(10000 + Math.random() * 90000)
     orderSuccess.value = true
     emit('checkout-completed', {
+      orderId: lastOrderRef.value,
       total: finalTotal.value,
-      fulfillment: fulfillmentType.value,
-      itemsCount: props.items.length
+      deliveryType: deliveryType.value,
+      paymentMethod: paymentMethod.value,
+      items: props.items
     })
-  }, 900)
+  }, 600)
 }
 
 const closeDrawer = () => {
-  orderSuccess.value = false
+  if (orderSuccess.value) {
+    orderSuccess.value = false
+    emit('clear-cart')
+  }
   emit('close')
 }
 </script>
@@ -107,11 +102,11 @@ const closeDrawer = () => {
       :class="isOpen ? 'translate-x-0' : 'translate-x-full'"
     >
       <!-- Header -->
-      <div class="p-6 border-b border-zinc-900 flex items-center justify-between">
+      <div class="p-5 sm:p-6 border-b border-zinc-900 flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <ShoppingBag class="w-5 h-5 text-white" />
+          <ShoppingBag class="w-5 h-5 text-orange-500" />
           <h2 class="text-base font-bold text-white">{{ t.cartTitle }}</h2>
-          <span class="text-xs text-zinc-500 font-mono">({{ items.length }})</span>
+          <span v-if="!orderSuccess" class="text-xs text-zinc-500 font-mono">({{ items.length }})</span>
         </div>
 
         <button 
@@ -122,25 +117,49 @@ const closeDrawer = () => {
         </button>
       </div>
 
-      <!-- Order Placed Success View -->
-      <div v-if="orderSuccess" class="p-8 text-center my-auto space-y-4">
+      <!-- SUCCESS VIEW -->
+      <div v-if="orderSuccess" class="p-8 text-center my-auto space-y-5">
         <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto">
           <CheckCircle2 class="w-8 h-8" />
         </div>
-        <h3 class="text-xl font-bold text-white">შეკვეთა მიღებულია!</h3>
-        <p class="text-sm text-zinc-300">
-          გმადლობთ! თქვენი შეკვეთა წარმატებით გაფორმდა.
-          Grills.ge-ს მენეჯერი დაგიკავშირდებათ უახლოეს წუთებში.
-        </p>
+        <div class="space-y-1">
+          <span class="text-xs font-mono text-orange-400 font-bold uppercase tracking-wider">
+            {{ t.orderRefLabel }} {{ lastOrderRef }}
+          </span>
+          <h3 class="text-xl font-bold text-white">{{ t.orderSuccessTitle }}</h3>
+          <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed max-w-sm mx-auto">
+            {{ t.orderSuccessSubtitle }}
+          </p>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-left text-xs space-y-2">
+          <div class="flex justify-between text-zinc-400">
+            <span>{{ t.selectDeliveryMethod }}</span>
+            <span class="font-bold text-white">
+              {{ deliveryType === 'self' ? t.deliverySelfOpt : (deliveryType === 'tbilisi' ? t.deliveryTbilisiOpt : t.deliveryRegionsOpt) }}
+            </span>
+          </div>
+          <div class="flex justify-between text-zinc-400">
+            <span>{{ t.selectPaymentMethod }}</span>
+            <span class="font-bold text-white">
+              {{ paymentMethod === 'online' ? t.paymentOnlineOpt : t.paymentCodOpt }}
+            </span>
+          </div>
+          <div class="flex justify-between text-zinc-400 border-t border-zinc-800 pt-2 font-bold text-sm">
+            <span>{{ t.totalPayable }}</span>
+            <span class="text-orange-400 font-mono">{{ finalTotal }} ₾</span>
+          </div>
+        </div>
+
         <button
           @click="closeDrawer"
-          class="px-6 py-2.5 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs cursor-pointer"
+          class="w-full py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition-all cursor-pointer shadow-lg shadow-orange-950/40"
         >
-          გაგრძელება
+          {{ t.finishBtn }}
         </button>
       </div>
 
-      <!-- Empty Cart State -->
+      <!-- EMPTY STATE -->
       <div v-else-if="items.length === 0" class="p-8 text-center my-auto space-y-3">
         <div class="w-16 h-16 rounded-full bg-zinc-900 text-zinc-600 flex items-center justify-center mx-auto">
           <ShoppingBag class="w-8 h-8" />
@@ -149,50 +168,48 @@ const closeDrawer = () => {
         <p class="text-xs text-zinc-400 max-w-xs mx-auto">{{ t.emptyCartSubtitle }}</p>
         <button
           @click="closeDrawer"
-          class="mt-3 px-6 py-2.5 rounded-full bg-white text-zinc-950 text-xs font-bold transition-all cursor-pointer hover:bg-zinc-200"
+          class="mt-3 px-6 py-2.5 rounded-full bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition-all cursor-pointer"
         >
           {{ t.ctaExplore }}
         </button>
       </div>
 
-      <!-- Items List & Checkout Body -->
-      <div v-else class="flex-1 overflow-y-auto p-6 space-y-5">
+      <!-- MAIN CART VIEW (Single View, No Extra Forms) -->
+      <div v-else class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
         
-        <!-- Free Shipping Notice -->
-        <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs">
-          <div class="flex items-center gap-2 text-zinc-300 font-medium">
-            <Truck class="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{{ subtotal >= 150 ? (currentLang === 'ka' ? 'უფასო მიწოდება საქართველოს მასშტაბით' : (currentLang === 'ru' ? 'Бесплатная доставка по Грузии' : 'Free delivery across Georgia')) : (currentLang === 'ka' ? `დაამატეთ ${150 - subtotal} ₾ უფასო მიწოდებისთვის` : (currentLang === 'ru' ? `Добавьте еще ${150 - subtotal} ₾ для бесплатной доставки` : `Add ${150 - subtotal} ₾ for free delivery`)) }}</span>
-          </div>
+        <!-- Fast delivery notice -->
+        <div class="p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs text-zinc-300 flex items-center gap-2">
+          <Truck class="w-4 h-4 text-orange-400 shrink-0" />
+          <span>{{ t.fastDeliveryBanner }}</span>
         </div>
 
-        <!-- Product Items -->
+        <!-- Cart Items List -->
         <div class="space-y-3">
           <div 
             v-for="item in items" 
             :key="item.product.id"
-            class="p-3 rounded-xl bg-zinc-900/40 border border-zinc-800/80 flex gap-3.5 items-center"
+            class="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex gap-3.5 items-center"
           >
             <!-- Image -->
             <img 
               :src="item.product.image" 
-              :alt="item.product.title.ka" 
-              class="w-16 h-16 rounded-lg object-cover border border-zinc-800 shrink-0"
+              :alt="item.product.title[currentLang] || item.product.title.ka" 
+              class="w-16 h-16 rounded-xl object-cover border border-zinc-800 shrink-0"
             />
 
             <!-- Info -->
             <div class="flex-1 min-w-0">
-              <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{{ item.product.brand }}</div>
-              <div class="text-xs font-semibold text-white truncate">
+              <div class="text-[10px] font-bold text-orange-400 font-mono tracking-wider">{{ item.product.sku }}</div>
+              <div class="text-xs font-bold text-white truncate">
                 {{ item.product.title[currentLang] || item.product.title.ka }}
               </div>
               <div class="text-xs font-mono font-bold text-zinc-200 mt-0.5">
-                {{ item.product.price.toLocaleString() }} ₾
+                {{ item.product.price }} ₾
               </div>
 
               <!-- Quantity changer -->
               <div class="flex items-center gap-2 mt-2">
-                <div class="flex items-center border border-zinc-800 bg-zinc-900 rounded-lg">
+                <div class="flex items-center border border-zinc-800 bg-zinc-950 rounded-lg">
                   <button 
                     @click="emit('update-quantity', item.product.id, item.quantity - 1)"
                     class="p-1 text-zinc-400 hover:text-white cursor-pointer"
@@ -220,36 +237,62 @@ const closeDrawer = () => {
 
             <!-- Item subtotal -->
             <div class="text-right text-xs font-mono font-bold text-white shrink-0">
-              {{ (item.product.price * item.quantity).toLocaleString() }} ₾
+              {{ (item.product.price * item.quantity) }} ₾
             </div>
           </div>
         </div>
 
-        <!-- Fulfillment Method -->
+        <!-- 1. Delivery Choice Radio Buttons -->
         <div class="space-y-2 pt-2 border-t border-zinc-900">
-          <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-            {{ t.selectPickupOrDelivery }}
+          <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
+            {{ t.selectDeliveryMethod }}
           </label>
           <div class="space-y-1.5 text-xs">
-            <label class="flex items-center gap-2.5 p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 cursor-pointer hover:border-zinc-700">
-              <input type="radio" value="delivery" v-model="fulfillmentType" class="accent-red-600" />
-              <div class="flex items-center justify-between w-full">
-                <span>{{ t.deliveryTbilisi }}</span>
-                <span class="font-mono text-emerald-400 font-medium">{{ shippingFee === 0 ? t.free : '15 ₾' }}</span>
+            <label class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 cursor-pointer hover:border-zinc-700">
+              <div class="flex items-center gap-2">
+                <input type="radio" value="tbilisi" v-model="deliveryType" class="accent-orange-500" />
+                <span>{{ t.deliveryTbilisiOpt }}</span>
+              </div>
+              <span class="font-mono text-white font-bold">20 ₾</span>
+            </label>
+
+            <label class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 cursor-pointer hover:border-zinc-700">
+              <div class="flex items-center gap-2">
+                <input type="radio" value="regions" v-model="deliveryType" class="accent-orange-500" />
+                <span>{{ t.deliveryRegionsOpt }}</span>
+              </div>
+              <span class="font-mono text-white font-bold">35 ₾</span>
+            </label>
+
+            <label class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 cursor-pointer hover:border-zinc-700">
+              <div class="flex items-center gap-2">
+                <input type="radio" value="self" v-model="deliveryType" class="accent-orange-500" />
+                <span>{{ t.deliverySelfOpt }}</span>
+              </div>
+              <span class="font-mono text-emerald-400 font-bold">{{ t.free }}</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 2. Payment Choice Radio Buttons (Online & COD - No TBC transfer) -->
+        <div class="space-y-2 pt-2 border-t border-zinc-900">
+          <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
+            {{ t.selectPaymentMethod }}
+          </label>
+          <div class="space-y-1.5 text-xs">
+            <label class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 cursor-pointer hover:border-zinc-700">
+              <div class="flex items-center gap-2">
+                <input type="radio" value="online" v-model="paymentMethod" class="accent-orange-500" />
+                <CreditCard class="w-3.5 h-3.5 text-cyan-400" />
+                <span>{{ t.paymentOnlineOpt }}</span>
               </div>
             </label>
-            <label class="flex items-center gap-2.5 p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 cursor-pointer hover:border-zinc-700">
-              <input type="radio" value="pickup-beliashvili" v-model="fulfillmentType" class="accent-red-600" />
-              <div class="flex items-center justify-between w-full">
-                <span>{{ t.pickupBeliashvili }}</span>
-                <span class="font-mono text-emerald-400 font-medium">{{ t.free }}</span>
-              </div>
-            </label>
-            <label class="flex items-center gap-2.5 p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 cursor-pointer hover:border-zinc-700">
-              <input type="radio" value="pickup-citymall" v-model="fulfillmentType" class="accent-red-600" />
-              <div class="flex items-center justify-between w-full">
-                <span>{{ t.pickupCityMall }}</span>
-                <span class="font-mono text-emerald-400 font-medium">{{ t.free }}</span>
+
+            <label class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 cursor-pointer hover:border-zinc-700">
+              <div class="flex items-center gap-2">
+                <input type="radio" value="cod" v-model="paymentMethod" class="accent-orange-500" />
+                <Banknote class="w-3.5 h-3.5 text-emerald-400" />
+                <span>{{ t.paymentCodOpt }}</span>
               </div>
             </label>
           </div>
@@ -257,41 +300,42 @@ const closeDrawer = () => {
 
       </div>
 
-      <!-- Drawer Footer with Total & Clean Payment Method Badges -->
-      <div v-if="items.length > 0 && !orderSuccess" class="p-6 bg-zinc-950 border-t border-zinc-900 space-y-4">
+      <!-- FOOTER SUMMARY & CHECKOUT BUTTON -->
+      <div v-if="items.length > 0 && !orderSuccess" class="p-5 sm:p-6 bg-zinc-950 border-t border-zinc-900 space-y-3">
         
-        <!-- Summary Breakdown -->
+        <!-- Breakdown -->
         <div class="space-y-1.5 text-xs text-zinc-400">
           <div class="flex justify-between">
             <span>{{ t.subtotal }}</span>
-            <span class="font-mono text-zinc-200">{{ subtotal.toLocaleString() }} ₾</span>
+            <span class="font-mono text-zinc-200">{{ subtotal }} ₾</span>
           </div>
           <div class="flex justify-between">
             <span>{{ t.shipping }}</span>
-            <span class="font-mono text-zinc-200">{{ shippingFee === 0 ? t.free : `${shippingFee} ₾` }}</span>
+            <span class="font-mono text-zinc-200">{{ deliveryFee === 0 ? t.free : `${deliveryFee} ₾` }}</span>
           </div>
           <div class="flex justify-between text-base font-bold text-white pt-2 border-t border-zinc-900">
             <span>{{ t.totalPayable }}</span>
-            <span class="font-mono text-xl">{{ finalTotal.toLocaleString() }} ₾</span>
+            <span class="font-mono text-xl text-orange-400">{{ finalTotal }} ₾</span>
           </div>
         </div>
 
-        <!-- Checkout Button -->
-        <button
-          @click="proceedToCheckout"
-          :disabled="isCheckingOut"
-          class="w-full py-3.5 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.98] shadow-lg disabled:opacity-60"
-        >
-          <span>{{ isCheckingOut ? t.processing : t.checkoutBtn }}</span>
-          <ArrowRight class="w-4 h-4" />
-        </button>
+        <!-- One-Click Checkout Button -->
+        <div class="pt-1">
+          <button
+            @click="proceedToCheckout"
+            :disabled="isCheckingOut"
+            class="w-full py-3.5 rounded-2xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg shadow-orange-950/50 active:scale-[0.98] disabled:opacity-60"
+          >
+            <span>{{ isCheckingOut ? t.processing : t.checkoutBtn }}</span>
+            <ArrowRight class="w-4 h-4" />
+          </button>
+        </div>
 
-        <!-- Clean Payment Method Badges Below Checkout Button -->
-        <div class="pt-2 flex items-center justify-center gap-2 flex-wrap text-[11px] text-zinc-500">
+        <!-- Payment badges below button -->
+        <div class="pt-1 flex items-center justify-center gap-2 flex-wrap text-[10px] text-zinc-500">
           <span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">Visa / Mastercard</span>
           <span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">Apple Pay</span>
-          <span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">TBC განვადება</span>
-          <span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">BOG ნაწილ-ნაწილ</span>
+          <span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">Google Pay</span>
         </div>
 
       </div>

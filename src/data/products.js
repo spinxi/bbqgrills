@@ -21,9 +21,9 @@ export const productsData = [
       ru: '#5 Model — Профессиональный XL гриль (72 x 42 см)'
     },
     subtitle: {
-      ka: 'ჩვენი ასორტიმენტის ყველაზე მოცულობითი გრილი — იდეალურია რესტორნებისა და ბარებისთვის',
-      en: 'Our highest capacity grill — ideal for restaurants, bars and large gatherings',
-      ru: 'Самый вместительный гриль в ассортименте — идеален для ресторанов и баров'
+      ka: 'დიდი ზომის პროფესიონალური გრილი — იდეალურია რესტორნებისთვის, აგარაკებისა და დიდი წვეულებებისთვის',
+      en: 'Heavy-duty commercial grill — ideal for restaurants, venues, and large gatherings',
+      ru: 'Большой профессиональный гриль — идеален для ресторанов, дач и больших компаний'
     },
     price: 549,
     oldPrice: 650,

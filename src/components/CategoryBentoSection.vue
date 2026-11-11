@@ -22,37 +22,25 @@ const categories = computed(() => [
   {
     id: 'all',
     title: props.t.catAll,
-    image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80',
     countKey: 'all'
+  },
+  {
+    id: 'commercial',
+    title: props.t.catCommercial,
+    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
+    countKey: 'commercial'
   },
   {
     id: 'charcoal-ceramic',
     title: props.t.catCharcoalCeramic,
-    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=600&q=80',
     countKey: 'charcoal-ceramic'
-  },
-  {
-    id: 'gas',
-    title: props.t.catGas,
-    image: 'https://images.unsplash.com/photo-1527477378408-1bc09c23310a?auto=format&fit=crop&w=600&q=80',
-    countKey: 'gas'
-  },
-  {
-    id: 'pizza',
-    title: props.t.catPizza,
-    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80',
-    countKey: 'pizza'
-  },
-  {
-    id: 'cutlery',
-    title: props.t.catCutlery,
-    image: 'https://images.unsplash.com/photo-1593618998160-e34014e67546?auto=format&fit=crop&w=600&q=80',
-    countKey: 'cutlery'
   },
   {
     id: 'accessories',
     title: props.t.catAccessories,
-    image: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80',
     countKey: 'accessories'
   }
 ])
@@ -74,41 +62,38 @@ const categories = computed(() => [
         </div>
       </div>
 
-      <!-- 6-Card Category Bento Grid -->
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4">
+      <!-- 4-Card Category Bento Grid -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <div
           v-for="cat in categories"
           :key="cat.id"
           @click="emit('select-category', cat.id)"
-          class="h-28 sm:h-36 relative overflow-hidden rounded-2xl border group cursor-pointer transition-all duration-300"
+          class="h-32 sm:h-40 relative overflow-hidden rounded-2xl border group cursor-pointer transition-all duration-300"
           :class="selectedCategory === cat.id 
-            ? 'border-red-600 ring-1 ring-red-600 shadow-lg shadow-red-950/40' 
+            ? 'border-orange-500 ring-2 ring-orange-500/50 shadow-xl shadow-orange-950/40' 
             : 'border-zinc-800 hover:border-zinc-600'"
         >
           <!-- Background Image with Dark Overlay -->
           <img
             :src="cat.image"
             :alt="cat.title"
-            class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 opacity-60 group-hover:opacity-75"
+            class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 opacity-55 group-hover:opacity-70"
             @error="(e) => e.target.src = 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80'"
           />
           <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent"></div>
 
           <!-- Item Count Badge Top-Right -->
-          <div class="absolute top-2.5 right-2.5 z-10">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-950/80 text-zinc-300 border border-zinc-700/80 backdrop-blur-sm">
+          <div class="absolute top-3 right-3 z-10">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-950/80 text-zinc-300 border border-zinc-700/80 backdrop-blur-sm">
               {{ productsCountByCategory[cat.countKey] || 0 }}
             </span>
           </div>
 
-          <!-- Category Title Bottom-Left -->
+          <!-- Title and Icon Bottom-Left -->
           <div class="absolute bottom-3 left-3 right-3 z-10">
-            <div 
-              class="text-xs sm:text-sm font-bold text-white leading-snug group-hover:text-red-400 transition-colors drop-shadow"
-              :class="{ 'text-red-400': selectedCategory === cat.id }"
-            >
+            <h3 class="text-xs sm:text-sm font-bold text-white group-hover:text-orange-400 transition-colors line-clamp-2 leading-snug">
               {{ cat.title }}
-            </div>
+            </h3>
           </div>
         </div>
       </div>

@@ -3,13 +3,12 @@ import { ref, computed, watch } from 'vue'
 import { 
   X, 
   ShoppingBag, 
-  MapPin, 
+  Truck, 
   ShieldCheck, 
-  Bell,
-  Plus,
-  Minus,
-  Clock,
-  Check
+  Plus, 
+  Minus, 
+  Flame,
+  CheckCircle2
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -31,16 +30,14 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'add-to-cart', 'open-sms'])
+const emit = defineEmits(['close', 'add-to-cart'])
 
 const activeImageIndex = ref(0)
 const quantity = ref(1)
-const isReserved = ref(false)
 
 watch(() => props.product, () => {
   activeImageIndex.value = 0
   quantity.value = 1
-  isReserved.value = false
 })
 
 const currentImage = computed(() => {
@@ -49,15 +46,6 @@ const currentImage = computed(() => {
     return props.product.gallery[activeImageIndex.value]
   }
   return props.product.image
-})
-
-const totalStock = computed(() => {
-  if (!props.product) return 0
-  return (props.product.stockBeliashvili || 0) + (props.product.stockCityMall || 0)
-})
-
-const isOutOfStock = computed(() => {
-  return totalStock.value <= 0
 })
 
 const localizedTitle = computed(() => {
@@ -75,16 +63,12 @@ const localizedCategory = computed(() => {
   if (props.product.categoryLabel) {
     return props.product.categoryLabel[props.currentLang] || props.product.categoryLabel.ka
   }
-  return props.currentLang === 'ka' ? 'გრილი' : (props.currentLang === 'ru' ? 'Гриль' : 'Grill')
+  return 'გრილი'
 })
 
 const handleAddToCart = () => {
   emit('add-to-cart', props.product, quantity.value)
   emit('close')
-}
-
-const handleReserve = () => {
-  isReserved.value = true
 }
 
 const decrementQuantity = () => {
@@ -106,7 +90,7 @@ const incrementQuantity = () => {
   >
     <div class="relative w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
       
-      <!-- Close Button (Positioned cleanly with high z-index) -->
+      <!-- Close Button -->
       <button 
         @click="emit('close')"
         class="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 p-2 sm:p-2.5 rounded-full bg-zinc-950/90 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer border border-zinc-800 shadow-md"
@@ -118,33 +102,29 @@ const incrementQuantity = () => {
       <!-- Modal Content Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2">
         
-        <!-- Left: Image Gallery & 3 Thumbnails Switcher -->
+        <!-- Left: Image Gallery & Thumbnails Switcher -->
         <div class="p-4 sm:p-8 bg-zinc-950 flex flex-col justify-between border-b md:border-b-0 md:border-r border-zinc-800/80">
           <div class="space-y-4">
             <!-- Large Image Preview -->
-            <div 
-              class="relative w-full aspect-square rounded-2xl overflow-hidden border border-zinc-800 shadow-inner flex items-center justify-center p-3"
-              :class="(product.isPNGStudio || (currentImage && currentImage.includes('grills.ge'))) 
-                ? 'bg-gradient-to-b from-zinc-800 to-zinc-900' 
-                : 'bg-zinc-900'"
-            >
+            <div class="relative w-full aspect-square rounded-2xl overflow-hidden border border-zinc-800 shadow-inner flex items-center justify-center p-3 bg-zinc-900">
               <img 
                 :src="currentImage" 
                 :alt="localizedTitle" 
-                class="transition-all duration-300"
-                :class="(product.isPNGStudio || (currentImage && currentImage.includes('grills.ge'))) 
-                  ? 'w-full h-full object-contain p-4' 
-                  : 'w-full h-full object-cover'"
-                @error="(e) => e.target.src = 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80'"
+                class="w-full h-full object-cover transition-all duration-300"
+                @error="(e) => e.target.src = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'"
               />
-              <div class="absolute top-3.5 left-3.5 z-10">
-                <span class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-zinc-950/85 text-white border border-zinc-700/80 backdrop-blur-sm">
-                  {{ product.brand }}
+              <div class="absolute top-3.5 left-3.5 z-10 flex flex-col gap-1.5 items-start">
+                <span class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-zinc-950/85 text-orange-400 border border-zinc-700/80 backdrop-blur-sm">
+                  {{ product.sku }}
+                </span>
+                <span v-if="product.isBlackFriday" class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-600 text-white shadow-md flex items-center gap-1">
+                  <Flame class="w-3 h-3 fill-white" />
+                  <span>BLACK FRIDAY</span>
                 </span>
               </div>
             </div>
 
-            <!-- 3 Thumbnails Switcher Below Main Image -->
+            <!-- Thumbnails Switcher Below Main Image -->
             <div class="flex items-center gap-3">
               <button
                 v-for="(img, idx) in (product.gallery || [product.image])"
@@ -152,23 +132,23 @@ const incrementQuantity = () => {
                 @click="activeImageIndex = idx"
                 class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 transition-all cursor-pointer bg-zinc-900 flex items-center justify-center p-1"
                 :class="activeImageIndex === idx 
-                  ? 'border-red-600 scale-105 shadow-md shadow-red-950/40' 
+                  ? 'border-orange-500 scale-105 shadow-md shadow-orange-950/40' 
                   : 'border-zinc-800 hover:border-zinc-600 opacity-60 hover:opacity-100'"
               >
                 <img 
                   :src="img" 
                   alt="Product view" 
-                  class="w-full h-full object-contain"
-                  @error="(e) => e.target.src = 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80'"
+                  class="w-full h-full object-cover rounded-lg"
+                  @error="(e) => e.target.src = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'"
                 />
               </button>
             </div>
           </div>
 
-          <!-- Official Distributor Guarantee Note -->
+          <!-- Quality Guarantee Note -->
           <div class="mt-4 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-400 flex items-center gap-2.5">
             <ShieldCheck class="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{{ t.officialDistributorGuarantee }}</span>
+            <span>{{ t.onlineShopGuarantee }}</span>
           </div>
         </div>
 
@@ -177,21 +157,18 @@ const incrementQuantity = () => {
           
           <div class="space-y-4">
             
-            <!-- Brand, Origin & SKU Code (with pr-12 to prevent overlap with close button) -->
+            <!-- Category & SKU Code -->
             <div class="flex items-center justify-between text-[11px] text-zinc-500 font-mono pr-12">
               <div class="flex items-center gap-2">
-                <span class="font-bold text-zinc-400 uppercase tracking-wider">{{ product.brand }} ({{ product.brandOrigin }})</span>
+                <span class="font-bold text-orange-400 uppercase tracking-wider">BBQ GRILLS GEORGIA</span>
                 <span>•</span>
-                <span class="text-red-500 font-semibold">{{ localizedCategory }}</span>
-              </div>
-              <div class="bg-zinc-800/80 px-2 py-0.5 rounded text-zinc-300 border border-zinc-700/60">
-                SKU: {{ product.sku || 'WB-1500014' }}
+                <span class="text-zinc-300 font-semibold">{{ localizedCategory }}</span>
               </div>
             </div>
 
             <!-- Title & Subtitle -->
             <div>
-              <h2 class="text-xl sm:text-2xl font-bold text-white leading-snug">
+              <h2 class="text-xl sm:text-2xl font-black text-white leading-snug">
                 {{ localizedTitle }}
               </h2>
               <p class="text-xs text-zinc-400 mt-1 leading-relaxed">
@@ -201,99 +178,81 @@ const incrementQuantity = () => {
 
             <!-- Price -->
             <div class="flex items-baseline gap-3 pb-3 border-b border-zinc-800">
-              <span class="text-2xl sm:text-3xl font-bold text-white font-mono">
-                {{ product.price.toLocaleString() }} ₾
+              <span class="text-2xl sm:text-3xl font-black text-white font-mono">
+                {{ product.price }} ₾
               </span>
               <span 
                 v-if="product.oldPrice" 
                 class="text-sm text-zinc-500 line-through font-mono"
               >
-                {{ product.oldPrice.toLocaleString() }} ₾
+                {{ product.oldPrice }} ₾
+              </span>
+              <span v-if="product.discountPercent" class="text-xs font-bold text-orange-400 bg-orange-950/60 px-2 py-0.5 rounded border border-orange-800/60">
+                {{ t.discountPrefix }} -{{ product.discountPercent }}%
               </span>
             </div>
 
-            <!-- Showroom Stock Status (Full-Width Horizontal Flex Bars, No Wrapping) -->
+            <!-- Online Stock & Delivery Status -->
             <div class="space-y-2">
-              <div class="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-                <MapPin class="w-3.5 h-3.5 text-red-500" />
-                <span>{{ t.showroomAvailabilityHeading }}</span>
-              </div>
-              <div class="space-y-2 text-xs">
-                <!-- Beliashvili 43 Row -->
-                <div class="flex items-center justify-between px-4 py-2.5 bg-zinc-900/80 rounded-xl border border-zinc-800">
-                  <div class="flex items-center gap-2">
-                    <span 
-                      class="w-2 h-2 rounded-full shrink-0" 
-                      :class="product.stockBeliashvili > 0 ? 'bg-emerald-400' : 'bg-zinc-600'"
-                    ></span>
-                    <span class="text-zinc-300 font-medium">{{ t.showroomBeliashviliBadge }}</span>
-                  </div>
-                  <span 
-                    class="font-medium font-mono whitespace-nowrap px-2.5 py-0.5 rounded-full text-[11px]"
-                    :class="product.stockBeliashvili > 0 
-                      ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60' 
-                      : 'bg-zinc-800 text-zinc-500 border border-zinc-700'"
-                  >
-                    {{ product.stockBeliashvili > 0 ? `${t.inStockWithCount} (${product.stockBeliashvili} ${t.stockUnits})` : t.outOfStock }}
-                  </span>
+              <div class="flex items-center justify-between px-3.5 py-2.5 bg-zinc-950/90 rounded-xl border border-zinc-800 text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span class="text-emerald-300 font-bold">{{ t.warehouseStockLive }}</span>
                 </div>
-
-                <!-- City Mall Saburtalo Row -->
-                <div class="flex items-center justify-between px-4 py-2.5 bg-zinc-900/80 rounded-xl border border-zinc-800">
-                  <div class="flex items-center gap-2">
-                    <span 
-                      class="w-2 h-2 rounded-full shrink-0" 
-                      :class="product.stockCityMall > 0 ? 'bg-emerald-400' : 'bg-zinc-600'"
-                    ></span>
-                    <span class="text-zinc-300 font-medium">{{ t.showroomCityMallBadge }}</span>
-                  </div>
-                  <span 
-                    class="font-medium font-mono whitespace-nowrap px-2.5 py-0.5 rounded-full text-[11px]"
-                    :class="product.stockCityMall > 0 
-                      ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60' 
-                      : 'bg-zinc-800 text-zinc-500 border border-zinc-700'"
-                  >
-                    {{ product.stockCityMall > 0 ? `${t.inStockWithCount} (${product.stockCityMall} ${t.stockUnits})` : t.outOfStock }}
-                  </span>
+                <div class="flex items-center gap-1.5 text-zinc-400">
+                  <Truck class="w-3.5 h-3.5 text-orange-400" />
+                  <span>{{ t.deliveryPricingNote }}</span>
                 </div>
               </div>
             </div>
 
-            <!-- Technical Specifications Table (ტექნიკური მახასიათებლები) -->
+            <!-- Technical Specifications Table -->
             <div class="space-y-2 pt-1">
               <div class="text-xs font-semibold text-zinc-300">
                 {{ t.techSpecs }}
               </div>
               <div class="rounded-xl border border-zinc-800 bg-zinc-950/60 overflow-hidden divide-y divide-zinc-800/80 text-xs">
-                <div class="px-3.5 py-2 flex justify-between">
+                <div v-if="product.specs.cookingArea" class="px-3.5 py-2 flex justify-between">
                   <span class="text-zinc-400">{{ t.specDiameter }}</span>
-                  <span class="font-medium text-zinc-200">{{ product.specs.diameter }}</span>
+                  <span class="font-bold text-white font-mono">{{ product.specs.cookingArea }}</span>
                 </div>
-                <div class="px-3.5 py-2 flex justify-between">
-                  <span class="text-zinc-400">{{ t.specFuel }}</span>
-                  <span class="font-medium text-zinc-200">{{ product.specs.fuel }}</span>
+                <div v-if="product.specs.capacity" class="px-3.5 py-2 flex justify-between">
+                  <span class="text-zinc-400">{{ t.specCapacity }}</span>
+                  <span class="font-bold text-white">{{ product.specs.capacity }}</span>
                 </div>
-                <div class="px-3.5 py-2 flex justify-between">
-                  <span class="text-zinc-400">{{ t.specMaterial }}</span>
-                  <span class="font-medium text-zinc-200">{{ product.specs.material }}</span>
-                </div>
-                <div class="px-3.5 py-2 flex justify-between">
+                <div v-if="product.specs.weight" class="px-3.5 py-2 flex justify-between">
                   <span class="text-zinc-400">{{ t.specWeight }}</span>
-                  <span class="font-medium text-zinc-200 font-mono">{{ product.specs.weight }}</span>
+                  <span class="font-bold text-white font-mono">{{ product.specs.weight }}</span>
                 </div>
-                <div class="px-3.5 py-2 flex justify-between">
-                  <span class="text-zinc-400">{{ t.specWarranty }}</span>
-                  <span class="font-medium text-red-500">{{ product.specs.warranty }}</span>
+                <div v-if="product.specs.fuel" class="px-3.5 py-2 flex justify-between">
+                  <span class="text-zinc-400">{{ t.specFuel }}</span>
+                  <span class="font-medium text-zinc-300">{{ product.specs.fuel }}</span>
                 </div>
+                <div v-if="product.specs.material" class="px-3.5 py-2 flex justify-between">
+                  <span class="text-zinc-400">{{ t.specMaterial }}</span>
+                  <span class="font-medium text-zinc-300">{{ product.specs.material }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Features list -->
+            <div v-if="product.features && (product.features[currentLang] || product.features.ka)" class="space-y-1.5 pt-1">
+              <div 
+                v-for="(feat, idx) in (product.features[currentLang] || product.features.ka).slice(0, 3)" 
+                :key="idx"
+                class="flex items-start gap-2 text-[11px] text-zinc-400 leading-snug"
+              >
+                <CheckCircle2 class="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
+                <span>{{ feat }}</span>
               </div>
             </div>
 
           </div>
 
-          <!-- Bottom Actions: Quantity Selector + Crimson Red Add to Cart + Showroom Reservation -->
-          <div class="space-y-2 pt-2">
-            <div v-if="!isOutOfStock" class="flex items-center gap-3">
-              <!-- Quantity Counter (- 1 +) -->
+          <!-- Bottom Action: Quantity Selector + Add to Cart -->
+          <div class="space-y-2.5 pt-3 border-t border-zinc-800">
+            <div class="flex items-center gap-2.5">
+              <!-- Quantity Counter -->
               <div class="flex items-center border border-zinc-700 bg-zinc-950 rounded-xl px-2 py-1 shrink-0">
                 <button 
                   @click="decrementQuantity"
@@ -312,42 +271,14 @@ const incrementQuantity = () => {
                 </button>
               </div>
 
-              <!-- Add to Cart Button (Crimson Red Accent) -->
+              <!-- Add to Cart Button -->
               <button
                 @click="handleAddToCart"
-                class="flex-1 py-3.5 px-6 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg shadow-red-600/20 active:scale-[0.98]"
+                class="flex-1 py-3.5 px-5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg shadow-orange-950/50 active:scale-[0.98]"
               >
                 <ShoppingBag class="w-4 h-4" />
-                <span>{{ t.addToCart }} ({{ (product.price * quantity).toLocaleString() }} ₾)</span>
+                <span>{{ t.addToCart }} ({{ (product.price * quantity) }} ₾)</span>
               </button>
-            </div>
-
-            <!-- If out of stock: SMS Notification Button -->
-            <button
-              v-else
-              @click="emit('open-sms', product); emit('close')"
-              class="w-full py-3.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all"
-            >
-              <Bell class="w-4 h-4 text-zinc-400" />
-              <span>{{ t.notifySms }}</span>
-            </button>
-
-            <!-- Showroom 1-Hour Reservation Button -->
-            <button
-              v-if="!isOutOfStock && !isReserved"
-              @click="handleReserve"
-              class="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors"
-            >
-              <Clock class="w-3.5 h-3.5 text-red-500" />
-              <span>{{ t.reserveShowroom }}</span>
-            </button>
-
-            <div 
-              v-else-if="isReserved"
-              class="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-xs text-emerald-300 flex items-center justify-center gap-2"
-            >
-              <Check class="w-4 h-4 text-emerald-400" />
-              <span>{{ t.reservationConfirmed }} #RES-{{ Math.floor(1000 + Math.random() * 9000) }} {{ t.inShowroom }}</span>
             </div>
           </div>
 

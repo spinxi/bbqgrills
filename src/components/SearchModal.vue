@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
-import { Search, X, ArrowRight, Tag } from 'lucide-vue-next'
+import { Search, X, ArrowRight } from 'lucide-vue-next'
 
 const props = defineProps({
   isOpen: {
@@ -27,13 +27,7 @@ const searchQuery = ref('')
 const searchInput = ref(null)
 
 const popularSearches = computed(() => {
-  if (props.currentLang === 'en') {
-    return ['Big Green Egg', 'Weber Kettle', 'Ooni Karu', 'Steak Knives', 'Cast Iron Dutch Oven']
-  }
-  if (props.currentLang === 'ru') {
-    return ['Big Green Egg', 'Weber Kettle', 'Ooni Karu', 'Стейковые ножи', 'Чугунная жаровня']
-  }
-  return ['Big Green Egg', 'Weber Kettle', 'Ooni Karu', 'სტეიკის დანები', 'თუჯის ქვაბი']
+  return ['#5 Model XL (72x42)', '#7 Starter 555', '#3 Model 459', '#2 Model 179', '#8 Starter 59', 'D59', 'D54']
 })
 
 watch(() => props.isOpen, (newVal) => {
@@ -50,9 +44,9 @@ const matchingProducts = computed(() => {
   const q = searchQuery.value.toLowerCase().trim()
   return props.products.filter(p => {
     const title = (p.title[props.currentLang] || p.title.ka || '').toLowerCase()
-    const brand = (p.brand || '').toLowerCase()
+    const sku = (p.sku || '').toLowerCase()
     const specs = Object.values(p.specs || {}).join(' ').toLowerCase()
-    return title.includes(q) || brand.includes(q) || specs.includes(q)
+    return title.includes(q) || sku.includes(q) || specs.includes(q)
   })
 })
 
@@ -78,7 +72,7 @@ const selectAndClose = (product) => {
       
       <!-- Top Search Input Bar -->
       <div class="p-4 sm:p-5 border-b border-zinc-800 flex items-center gap-3 bg-zinc-950">
-        <Search class="w-5 h-5 text-red-500 shrink-0" />
+        <Search class="w-5 h-5 text-orange-500 shrink-0" />
         <input 
           ref="searchInput"
           type="text"
@@ -102,13 +96,13 @@ const selectAndClose = (product) => {
       </div>
 
       <!-- Popular Searches Strip -->
-      <div class="px-5 py-3 bg-zinc-950/60 border-b border-zinc-800/60 flex items-center gap-2 overflow-x-auto text-xs">
+      <div class="px-5 py-3 bg-zinc-950/60 border-b border-zinc-800/60 flex items-center gap-2 overflow-x-auto text-xs scrollbar-none">
         <span class="text-zinc-500 shrink-0 font-medium">{{ t.popularSearchesLabel }}</span>
         <button
           v-for="tag in popularSearches"
           :key="tag"
           @click="setPopularQuery(tag)"
-          class="px-2.5 py-1 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors shrink-0 cursor-pointer"
+          class="px-2.5 py-1 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors shrink-0 cursor-pointer text-[11px]"
         >
           {{ tag }}
         </button>
@@ -129,21 +123,18 @@ const selectAndClose = (product) => {
                 :src="product.image" 
                 :alt="product.title.ka" 
                 class="w-12 h-12 rounded-lg object-cover border border-zinc-800 shrink-0"
-                @error="(e) => e.target.src = 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80'"
+                @error="(e) => e.target.src = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'"
               />
               <div class="min-w-0">
-                <div class="text-[10px] font-bold text-red-500 uppercase tracking-wider">
-                  {{ product.brand }}
+                <div class="text-[10px] font-bold text-orange-400 font-mono tracking-wider">
+                  {{ product.sku }}
                 </div>
-                <div class="text-xs sm:text-sm font-semibold text-white truncate group-hover:text-red-400 transition-colors">
+                <div class="text-xs sm:text-sm font-semibold text-white truncate group-hover:text-orange-400 transition-colors">
                   {{ product.title[currentLang] || product.title.ka }}
                 </div>
                 <div class="text-[11px] text-zinc-400 mt-0.5">
-                  <span v-if="(product.stockBeliashvili + product.stockCityMall) > 0" class="text-emerald-400">
-                    {{ t.inStockWithCount }} ({{ product.stockBeliashvili + product.stockCityMall }} {{ t.stockUnits }})
-                  </span>
-                  <span v-else class="text-zinc-500">
-                    {{ t.outOfStock }}
+                  <span class="text-emerald-400">
+                    ● {{ t.inStockBadge }}
                   </span>
                 </div>
               </div>
@@ -151,9 +142,9 @@ const selectAndClose = (product) => {
 
             <div class="text-right shrink-0">
               <div class="text-xs sm:text-sm font-bold text-white font-mono">
-                {{ product.price.toLocaleString() }} ₾
+                {{ product.price }} ₾
               </div>
-              <div class="text-[10px] text-zinc-500 group-hover:text-red-400 flex items-center gap-1 justify-end mt-0.5">
+              <div class="text-[10px] text-zinc-500 group-hover:text-orange-400 flex items-center gap-1 justify-end mt-0.5">
                 <span>{{ t.viewProduct }}</span>
                 <ArrowRight class="w-3 h-3" />
               </div>
